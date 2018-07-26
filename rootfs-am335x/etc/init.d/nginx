@@ -1,0 +1,45 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:     nginx
+# Required-Start:   $remote_fs $syslog
+# Required-Stop:    $remote_fs $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:     
+# Short-Description:    nginx
+### END INIT INFO
+
+start() {
+	echo -n "Starting nginx: "
+	start-stop-daemon -S -x /usr/local/sbin/nginx
+	echo "OK"
+}
+
+stop() {
+	echo -n "Stopping nginx: "
+	start-stop-daemon -K -x /usr/local/sbin/nginx
+	echo "OK"
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart|reload)
+	restart
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

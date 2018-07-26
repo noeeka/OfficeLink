@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Start the network....
+#
+INTERFACES_CONF=/etc/network/interfaces
+RESOLV_CONF=/etc/resolv.conf
+case "$1" in
+  start)
+ 	echo "Starting network..."
+ 	awk '/auto/ {system("ifconfig "$2" 0.0.0.0")}' $INTERFACES_CONF
+ 	echo -n > $RESOLV_CONF
+	/sbin/ifup -a
+	awk '/dns/ {for(i=2;i<=NF;i++) {print "nameserver "$i}}' $INTERFACES_CONF >> $RESOLV_CONF
+	;;
+  stop)
+	echo -n "Stopping network..."
+	/sbin/ifdown -a
+	;;
+  restart|reload)
+	"$0" stop
+	"$0" start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?
+

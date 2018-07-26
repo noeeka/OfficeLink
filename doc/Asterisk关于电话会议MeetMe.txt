@@ -1,0 +1,361 @@
+我的团队我的团
+博客园首页新随笔联系订阅 管理 随笔-2  文章-20  评论-15 
+asterisk 关于电话会议MeetMe
+
+
+MeetMe 
+
+概要
+
+　　MeetMe 会议桥
+
+描述 
+
+　　语法：MeetMe([confno][,[options][,pin]])
+
+　　用途: 让用户进入一个指定的MeetMe会议。如果省略了会议编号，系统会提示用户选择一个。（注意：MeetMe会议需要一个Zaptel时钟才能工作，你可以不装任何板卡，但是你需要安装Zaptel）
+
+　　参数：options可以为空，也可以设置一个或者多个参数，参数有如下一些：
+
+·         '1' — 当会议室的第一个成员进入会议时，不向用户提示"you are currently the only person in this conference您是当前会议室唯一的成员" (Asterisk 1.2.11以上版本才支持)
+ 
+·         'a' — 设为管理员
+ 
+·         'A' — 设为标记成员
+ 
+·         'b' — 运行在${MEETME_AGI_BACKGROUND}指定的AGI脚本
+o    缺省: conf-background.agi (注意：需要会议室内有ZAP通道才能运行)
+·         'c' — 加入会议时提示会议成员数量
+ 
+·         'd' — 动态加入会议
+ 
+·         'D' — 动态加入会议，提示要求输入密码
+o    如果用户不想给会议设密码，可以直接按井
+·         'e' — 选择一个空会议。
+ 
+·         'E' — 选择一个没密码的空会议。
+ 
+·         'F' — 在会议中透传DTMF按键，所有成员都能收到DTMF。
+ 
+·         'i' —提示有成员加入/离开会议with review— 需要chan_zap.so (Asterisk 1.2以上版本才支持)
+ 
+·         'I' --提示有成员加入/离开会议 without review
+ 
+·         'M' —当会议室只有一个人的时候放等待音乐
+ 
+·         'm' —旁听状态(只能听，不能说)
+ 
+·         'p' —允许用户按井退出会议室
+ 
+·         'P' — 无论用户是否指定，总是提示用户输入会议密码
+ 
+·         'q' — 安静模式 (有成员加入/离开会议不做任何提示)
+ 
+·         'r' — 会议录音 (录音文件名${MEETME_RECORDINGFILE}，格式 ${MEETME_RECORDINGFORMAT})。缺省文件名是：meetme-conf-rec-${CONFNO}-${UNIQUEID} ，缺省格式是wav。 — 这个参数同样需要chan_zap.so。
+ 
+·         's' —收到*键的时候播放菜单，普通成员是普通菜单，管理员是管理员菜单('send' to menu)
+ 
+·         't' — 设为只说模式 (只说，不听)
+ 
+·         'T' — 设置说话人检测 (在manager interface 和 meetme list可以看到)
+ 
+·         'v' — 视频模式 (目前还不支持)
+ 
+·         'w' — 等待标记成员进入会议。
+o    在标记成员进入会议之前，所有成员只能听音乐。
+·         ? 'X' — 允许用户输入${MEETME_EXIT_CONTEXT}里面的一个有效的单个数字来退出会议。如果${MEETME_EXIT_CONTEXT}没有定义，则从当前的内容里找有效数字。allow user to exit the conference by entering a valid single digit extension of the context specified in or the current context if that variable is not defined. （此参数不支持Asterisk v1.2.0版本）
+ 
+·         'x' — 当最后一个标记用户退出会议室的时候，关闭会议。
+
+参数详解
+
+　　参数 's' 
+
+　　's' 和 'p' 参数不能跟 'X' 参数共同使用。
+
+·         普通成员: 按键*将听到语音菜单"Please press 1 to mute or unmute yourself"; Asterisk v1.2版本现在支持对单独会议的单独成员进行音量调整。
+ 
+·         管理员(在加入会议的时候使用了 'a' 参数): 按键*将听到语音菜单"Press 1 to mute/unmute yourself, 2 to lock/unlock this conference"
+
+　　参数 'q' 
+
+　　最好在 Asterisk v1.2以上版本用，早期版本的SIP通道会有延迟。
+
+　　参数 'r' 
+
+　　在开始MeetMe()录音之前，要指定Set ${MEETME_RECORDINGFILE}的值。
+
+　　否则，录音文件将存放在/var/lib/asterisk/sounds目录下，该目录是存放系统提示音的，不适合存放录音文件。
+
+　　例如：
+
+　　exten => s,1,SetVar(MEETME_RECORDINGFILE=/var/conf_recording-${EPOCH}-${USER})
+　　exten => s,2,MeetMe(,rD) ;开设一个新会议，对会议录音，
+
+　　例子 
+
+　　在meetme.conf 中设定一个会议室号为101，密码为123456的会议。
+　　exten => 500,1,MeetMe(101||123456) 
+
+　　授权的会议
+
+　　exten => 18,1,Answer 
+　　exten => 18,2,Wait(1) 
+　　exten => 18,3,Authenticate(5678) 
+　　exten => 18,4,MeetMe(18|p) 
+　　exten => 18,5,Playback(vm-goodbye) 
+　　exten => 18,6,Hangup 
+
+　　动态会议室，用户需要按键输入要创建的会议室号
+
+　　exten => 9999,1,Wait(1) 
+　　exten => 9999,2,MeetMe(|Md) 
+
+　　注意:如果你加入参数'e', 按*将选择#会议室
+　　如果你需要为会议室设定一个密码，，请将 'd' 参数改为 'D' 。
+
+　　动态会议室123设为安静模式。如果用户foo 拨打分机号10，他将成为一个标记用户（’A’），foo离开会议后，会议室将被关闭，其他的拨打11的用户也将被迫离开会议室。
+
+　　exten => 10,1,MeetMe(123|Aqd) 
+　　exten => 11,1,MeetMe(123|xqd) 
+
+　　OEJ发表的回顾 (May 23, 2004) 
+
+　　你发现这个简单得不能再简单的(not-so-simple-anymore)简单MeetMe会议桥了吗？这可是Asterisk的一个杀手级应用哦。它带来丰富的功能应用：
+
+·         多种渠道，包括VoIP 和 PSTN，都能参加的多方会议
+ 
+·         宣讲模式：一个说话人，众多的旁听者。
+ 
+·         管理功能：踢用户，让会议静音，锁定会议
+ 
+·         等待其他成员的时候可以收听等待音乐
+ 
+·         可以预设会议
+ 
+·         也可以动态创建会议(第一个成员将被告知会议号码)
+
+　　更多丰富命令包括：
+
+·         MeetMe – 加入会议 (有时候也用于创建新会议)
+ 
+·         MeetMeAdmin – 踢人、锁定会议、让会议静音
+ 
+·         MeetMeCount – 统计会议室内的成员名单
+
+　　在CLI 下面也可以管理MeetMe:
+
+·         Meetme List all conferences
+ 
+·         MeetMe kick 踢一个人
+ 
+·         MeetMe kick 踢所有人
+ 
+·         MeetMe list 列出会议室内的所有成员
+ 
+·         MeetMe lock 锁定会议室，不再加人
+ 
+·         MeetMe unlock 解锁会议室
+ 
+·         MeetMe mute 禁止某个人发言
+ 
+·         MeetMe unmute 允许某个人发言
+
+　　OEJ附加说明
+
+·         会议桥默认语音编码格式是ulaw。 如果采用其他编码，将额外占用CPU资源。
+ 
+·         MEETMESECS参数包含了用户参加会议中的时长（以秒为单位）。
+ 
+·         改动meetme.conf无需重新加载，系统会自动读取
+ 
+·         在dial plan中，您可以通过meetmecount()和参数来限制参加会议的人数
+ 
+·         MeetMe依赖Zaptel时钟，您需要安装Zaptel驱动，最好有一片Asterisk兼容的语音卡。
+ 
+·         潜规则
+ 
+·         MeetMe应用需要一个时钟才能工作。 有几种方法可以获得时钟，其中Zaptel卡提供的工作时钟是一个不错的选择，如果你没有Zaptel卡，也可以使用ztdummy 时钟。
+ 
+·         动态会议 的工作方式可能跟你想得不太一样。很明显，动态会议的意思就是创建一个并未存在的会议。所以当用户A创建了一个会议号为200的会议之后，如果用户也来创建一个会议号为200的会议，那么用户B将被直接加入用户A的会议，而不会对用户B提示说已经会议号200已经被人用了。另外，如果用户A创建的这个#200会议有密码，那么用户B将听到密码无效的声音，然后系统会提示用户B重新输入一个要创建的会议号码。要想解决这个问题，我们能做的就是通过参数 'e' 来让系统自动分配会议号码。
+
+性能方面的考虑
+
+　　在ISDN PRI环境下开超过10个人的MeetMe会议 
+
+　　我曾经发现在ISDN PRI环境下超过10个人的会议回发生啸叫。人们认为电信运营商已经对ISDN-PRI这样的纯数字化环境做过回声消除了，所以不需要再设置回声消除。然而事实并非如此。我在配置文件/etc/asterisk/zapata.conf下面增加了下列的参数项，从而解决了这个问题：
+
+　　echocancel=yes 
+　　echocancelwhenbridged=yes 
+　　echotraining=yes 
+
+架构和局限
+
+　　在Asterisk 1.2版本中，同时开很多个会议的时候可能会有些局限。目前大部分版本已经升到1.4及以上，也就不存在这些问题了，不再鏊述。
+
+　　关于参数'b' (AGI_BACKGROUND) 
+
+　　网友疑问： 
+
+　　我看了论坛上一些老的帖子，但是还是有个疑问，是关于AGI_BACKGROUND的。如果我的机器上安装了Asterisk兼容板卡但是会议里没有加入Zap通道，只有SIP通道，那么SIP通道上的MEETME_AGI_BACKGROUND脚本能正常工作吗？
+
+　　回答：
+
+　　不能正常工作。下面我们分析一下工作原理：
+
+　　合并输入的语音包，输出合并后的语音包，这些工作是在Zaptel驱动里面做的。对于真实的Zap通道，这个工作是在驱动层就请全部完成的。而对于非Zap通道，系统会创建一个Zap虚拟通道，然后在非Zap通道和Zap虚拟通道之间双向拷贝语音数据。
+
+　　看一下这部分源代码（在conf_run()中），我们会发现，conf_run() 函数要么执行AGI脚本，要么执行虚拟通道拷贝循环，不能同时执行两个。所以当你使用AGI脚本的时候，在非Zap 通道和Zap虚拟通道之间就没有任何连接了。
+
+　　拥有一块Asterisk卡或者dummy时钟驱动 (比如： ztdummy 或者 zaprtc) 都能使用MeetMe功能，但是这并不意味着你可以在参加会议的SIP通道上使用AGI：他们没有执行任何AGI的能力。你可以试下看，但是最终的结果一定是什么声音也得不到。 
+
+　　还要注意的是，使用AGI将会使其他的一些内置功能，比如说静音、踢人和音乐等待等功能不能使用。
+
+　　AGI_BACKGROUND Pros/Cons 
+
+　　使用AGI将会使其他的一些内置功能，比如说不用通过命令行实现静音、踢人和音乐等待等功能。 
+
+　　参数 'p' (按#退出) 也不能用。录音功能也不能用。 
+
+　　如果你需要把会议中的某个成员踢出去，首先需要停止该成员的AGI_BACKGROUND 任务。
+
+　　一旦AGI_BACKGROUND脚本停止，该成员就自动退出会议室了。
+
+　　所有的DTMF按键事件都被送到AGI_BACKGROUND 进程/脚本。所以你可以让你的.agi脚本不停地循环，捕获按键音，来决定怎样处理一个特定的按键。
+
+　　AGI_BACKGROUND 也开放了很多开发的编程机会。你可以使用进程间通讯（sockets, signals等等）来远程控制会议室（即： 基于外部时间或用户输入来给会议室放音）。
+
+　　从普通通话发起多方通话（邀请用户参加会议） 
+
+　　下面我讲一下怎样从一个普通通话（两方通话）发起多方通话。主要是通过MeetMe和ChannelRedirect来实现。
+
+　　疑问: 在 Asterisk 1.4 版本中，我们是否需要用'ManagerRedirect'来替换 'ChannelRedirect'？
+
+　　下面是dialplan 例子: 
+
+　　[default] 
+　　exten => _XXX,1,Set(DYNAMIC_FEATURES=nway-start) 
+　　exten => _XXX,n,Dial(SIP/${EXTEN}) 
+
+　　[dynamic-nway] 
+　　exten => _XXX,1,Answer 
+　　exten => _XXX,n,Set(CONFNO=${EXTEN}) 
+　　exten => _XXX,n,Set(MEETME_EXIT_CONTEXT=dynamic-nway-invite) 
+　　exten => _XXX,n,Set(DYNAMIC_FEATURES=) 
+　　exten => _XXX,n,MeetMe(${CONFNO},pdMX) 
+　　exten => _XXX,n,Hangup 
+
+　　[dynamic-nway-invite] 
+　　exten => 0,1,Read(DEST,dial,,i) 
+　　exten => 0,n,Set(DYNAMIC_FEATURES=nway-inv#nway-noinv) 
+　　exten => 0,n,Dial(Local/${DEST}@dynamic-nway-dest,,g) 
+　　exten => 0,n,Set(DYNAMIC_FEATURES=) 
+　　exten => 0,n,Goto(dynamic-nway,${CONFNO},1) 
+　　exten => i,1,Goto(dynamic-nway,${CONFNO},1) 
+
+　　[dynamic-nway-dest] 
+　　exten => _XXX,1,Dial(SIP/${EXTEN}) 
+
+　　[macro-nway-start] 
+　　exten => s,1,Set(CONFNO=${FindFreeConf()}) 
+　　exten => s,n,ChannelRedirect(${BRIDGEPEER},dynamic-nway,${CONFNO},1) 
+　　exten => s,n,Read(DEST,dial,,i) 
+　　exten => s,n,Set(DYNAMIC_FEATURES=nway-inv#nway-noinv) 
+　　exten => s,n,Dial(Local/${DEST}@dynamic-nway-dest,,g) 
+　　exten => s,n,Set(DYNAMIC_FEATURES=) 
+　　exten => s,n,Goto(dynamic-nway,${CONFNO},1) 
+
+　　[macro-nway-ok] 
+　　exten => s,1,ChannelRedirect(${BRIDGEPEER},dynamic-nway,${CONFNO},1) 
+
+　　[macro-nway-notok] 
+　　exten => s,1,SoftHangup(${BRIDGEPEER}) 
+
+　　注意：你需要用 FindFreeConf() 函数 (或者其他方式) 来获得空闲的会议室号码。
+
+　　此外，还需要修改 features.conf，增加下面的内容：
+
+　　[applicationmap] 
+　　nway-start => *0,caller,Macro,nway-start 
+　　nway-inv => **,caller,Macro,nway-ok 
+　　nway-noinv => *#,caller,Macro,nway-notok 
+
+（译注：事实上，FindFreeConf()这个函数好像需要Trunk版本支持，需要修改一下这个例子的部分内容才能运行。另外，实际测试中我们也发现，两个按键*0之间的间隔时间不能太长，最好是连续按键。）
+
+　　工作原理: 
+
+　　普通通话情况下：
+
+　　当你和别人通话的时候，按*0 (执行宏 nway-start)。 被叫马上被传递到一个空闲的会议室，而你将听到拨号音，等待你输入你要邀请的电话号码。当被邀请方接通后，你在和这个第三方通话的过程中，可以按 ** （在features.conf可以定义）加入会议，按 *# 挂掉他然后返回会议。
+
+　　会议室情况下：
+
+　　在会议室里面，任何用户可以按0邀请其他用户加入会议，其他的步骤同上。
+
+　　合并会议 
+
+　　这些可以使用使用 Asterisk local channels 和 Asterisk manager API来实现(一般使用AGI 或者Call Files) 。
+
+　　下面是一个合并会议123和会议124的OriginateAction例子：
+
+　　在dialplan (context = default): 
+　　exten => 7799,1,Meetme(123|qd) 
+　　exten => 7798,1,Meetme(124|qd) 
+
+　　在Manager API: 
+　　Action: Originate 
+　　ActionID: 12345678 
+　　Channel: local/7798 
+　　Context: default 
+　　Exten: 7799 
+　　Priority: 1 
+
+　　与某个成员悄悄话
+
+　　在Meetme中，还有一个类似ChanSpy的悄悄话功能（密谈）。会议成员可以与其他成员通过'whisper'功能来密谈。 
+
+　　我还增加了一个 'z' 标志: 
+
+　　'z' — 所有的DTMF按键事件将被送到manager 
+
+　　用户可以通过对MeetMe系统中的按键进行侦测，然后在决定在manager命令中如何处理。
+除了标准MeetMe之外的其他选择 
+
+　　MeetMe2 
+
+　　MeetMe2是在MeetMe基础上增加了Web控制界面的一个变体。
+
+　　"目的是控制会议室里面的声音和成员。这个功能可以为你提供一个通过网络来控制会议和直观查看会议的方法。app_meetme已经做了大量改动，将一些会议信息写入DB，并检查会议属性是否已经改变。" 
+
+　　Q: 我看到会议中的成员，但是我不能把他们踢出去，也不能将他们的模式从说变成可听可说。没有显示任何错误。
+　　A: 在php中打开register_globals。
+　　你也可以在php文件的顶部加入"extract($_GET);" 
+（也有网友建议使用MeetMe-Web-Control来替代MeetMe2） 
+
+　　app_conference
+
+　　另外一个变种 app_conference，针对大容量的会议。 
+　　http://sourceforge.net/projects/appconference/ 
+　　有些人认为它比MeetMe更为强大，但是目前还没有人提供详细的比较测试数据。
+
+　　远程会议主机 
+
+　　通过第三方会议提供商: http://www.junctionnetworks.com，IAX和SIP通道可以加入远程会议。在dialplan里面可以这样写：
+　　exten => 7000,1,Dial(IAX2/conference@iax.jnctn.net)
+　　exten => 7000,1,Dial(SIP/conference@sip.jnctn.net) 
+
+　　通过拨打7000，您就可以参加他们的会议。
+　　他们提供很多种参加会议的方法，可以通过Web网页来订制，方便了会议
+好文要顶 关注我 收藏该文  
+我的团队
+关注 - 2
+粉丝 - 7
++加关注
+0 0
+(请您对文章做出评价)
+« 上一篇：mscrm中实现三级下拉菜单的效果
+» 下一篇：Asterisk 内核简介
+posted @ 2010-05-07 14:02 我的团队 阅读(3434) 评论(0)  编辑 收藏
+刷新评论刷新页面返回顶部
+注册用户登录后才能发表评论，请 登录 或 注册，访问网站首页。
+【推荐】50万行VC++源码: 大型组态工控、电力仿真CAD与GIS源码库

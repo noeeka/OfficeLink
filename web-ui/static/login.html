@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>首页</title>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<style type="text/css">
+    .vertical-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        margin: 0 0;
+        transform: translate(-50%, -50%);
+    }
+    
+    .row {
+        margin: 0 0;
+        width: 100%;
+    }
+
+    #login input, button {
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    #logo {
+        font-size: 40px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    
+    body {
+        background-image: url(background.png);
+        background-size: 100%;
+    }
+
+</style>
+</head>
+<body>
+<div class="contianer vertical-center">
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div id="logo" class="col-md-4 text-center">
+            <img src="logo.png">
+            <span>Office Link</span>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-5"></div>
+        <div class="col-md-2">
+            <form id="login" role="form">
+                <input class="form-control" type="text" id="user" name="user" placeholder="用户名">
+                <input class="form-control" type="password" id="password" name="password" placeholder="密码">
+                <button type="button" class="btn btn-primary btn-block" style="font-weight: bold;">登 陆</button>
+            </form>
+        </div>
+        <div class="col-md-5"></div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/md5.min.js"></script>
+<script>
+    function login() {
+        var user = $("#user").val();
+        var password = $("#password").val();
+        if("" == user || "" == password) {
+            return false;
+        }
+        var data = {"user": user, "password": md5(password)};
+        $.ajax({url:"/api/login", type: "POST", data: JSON.stringify(data), dataType: "JSON", contentType: "application/json", success: function(result) {
+            console.log("success", result);
+        }, error: function(result) {
+            console.log("error", result);
+        }});
+        return true;
+    }
+    $("#login > input").keydown(function(e) {
+        if(e.keyCode == 13) {
+            if(!login()) {
+                console.log("login error");
+            }
+        }
+    });
+    
+    $("#login > button").click(function(e) {
+        if(!login()) {
+            console.log("login error");
+        }
+    });
+</script>
+</html>

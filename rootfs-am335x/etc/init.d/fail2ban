@@ -1,0 +1,46 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:     asterisk
+# Required-Start:   $remote_fs $syslog
+# Required-Stop:    $remote_fs $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:     
+# Short-Description:    fail2ban
+### END INIT INFO
+
+start() {
+	echo -n "Starting fail2ban: "
+	[ -d /var/run/fail2ban ] || mkdir -p /var/run/fail2ban
+	start-stop-daemon -S -x /usr/bin/fail2ban-server
+	echo "OK"
+}
+
+stop() {
+	echo -n "Stopping fail2ban: "
+	start-stop-daemon -K -p /var/run/fail2ban/fail2ban.pid
+	echo "OK"
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart|reload)
+	restart
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

@@ -1,0 +1,4 @@
+config BR2_PACKAGE_JANSSON
+	bool "jansson"
+	help
+	  Standard GNU compressor.  Provides jansson.

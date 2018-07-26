@@ -1,0 +1,56 @@
+iptables v1.4.2: can't initialize iptables table `filter'
+[摘要：本文地点：http://fongzhiye.blog.163.com/blog/static/202836152201231945019139/ 若是履行 iptable -L 涌现以下疑息，那末便须要从新设置装备摆设战编译内核： iptables v1.4.2: can't initialize iptables table `filter': Table do] 
+
+
+原文地址：http://fongzhiye.blog.163.com/blog/static/202836152201231945019139/
+如果执行 iptable -L 出现以下信息，那么就需要重新配置和编译内核：
+
+iptables v1.4.2: can't initialize iptables table `filter': Table does not exist (do you need to insmod?)
+
+Perhaps iptables or your kernel needs to be upgraded.
+
+
+内核配置选项：
+
+
+Networking —->
+
+
+Networking options —->
+
+
+[*] Network packet filtering (replaces ipchains) —>
+
+
+Core Netfilter Configuration —>
+
+
+<*> Netfilter Xtables support (required for ip_tables)
+
+
+IP: Netfilter Configuration —>
+
+
+<*> Connection tracking (required for masq/NAT)
+
+
+<*> IP tables support (required for filtering/masq/NAT)
+
+
+<*> IP range match support
+
+
+<*> Packet filtering
+
+
+<*> REJECT target support
+
+
+<*> Full NAT
+
+
+
+
+/home/mysytem/chipcorekernel/linux/kernels/mips-linux-2.6.15
+
+/home/mysytem/chipcorekernel/linux/kernels/mips-linux-2.6.15/arch/mips/configs/pb44-small_defconfig'

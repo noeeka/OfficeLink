@@ -1,0 +1,52 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:     bluetooth
+# Required-Start:   $remote_fs $syslog
+# Required-Stop:    $remote_fs $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:     
+# Short-Description:    bluetooth
+### END INIT INFO
+PIDFILE=/var/run/led.pid
+
+start() {
+	echo -n "Starting led: "
+    if [ ! -f $PIDFILE ];then 
+        led.lua 0>/dev/null 1>/dev/null 2>&1 &
+        echo $! > $PIDFILE
+    fi
+	echo "OK"
+}
+
+stop() {
+	echo -n "Stopping led: "
+    if [ -f $PIDFILE ];then 
+	    start-stop-daemon -K -q -p $PIDFILE
+        rm -f $PIDFILE
+    fi
+	echo "OK"
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart|reload)
+	restart
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?
